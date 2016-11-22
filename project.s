@@ -10,6 +10,7 @@
 .global main
 .section .exceptions, "ax"
 IHANDLER:
+wrctl ctl0, r0 #turn off PIE bit
 addi sp,sp,-16 #we need to use a second register, so we save r10 and will use it
 stw r10,0(sp)
 stw et,4(sp) #we also save et and ctl1 just in case this interrupt interrupted another ISR
@@ -20,15 +21,18 @@ rdctl et, ctl4
 andi et,et,0x1 # check if interrupt pending from IRQ0 (ctl4:bit0)
 beq et,r0,IDoButtons # if not timer, try buttons
 COLOUR:
-movi et,1
-wrctl ctl0, et #set PIE bit – the pushbuttons can now cause an interrupt
   sthio r4,0(r2) /* r2 + 1032 pixel (4,1) is x*2 + y*1024 so (8 + 1024 = 1032) */
   addi r2, r2, 1
   stwio r0,0(r11) 
     movia r13, 0x0804B000
-	bgtu r13, r2, EXIT_IHANDLER
+	bgtu r13, r2, TimerReset
 	#RESET
 	movia r2, ADDR_VGA
+	TimerReset:
+	stwio r0, 0(r11)
+movia r12, 5
+  stwio r12, 4(r11)                          # Start the timer without continuing or interrupts 
+
 br EXIT_IHANDLER
 IDoButtons:
  # set LEDS to values
@@ -40,10 +44,6 @@ ldwio et,0(et) #get button values
 stwio et,0(r10) #change LEDs
 
 EXIT_IHANDLER:
-stwio r0, 0(r11)
-movia r12, 5
-  stwio r12, 4(r11)                          # Start the timer without continuing or interrupts 
-wrctl ctl0, r0 #turn off PIE bit
 # now restore the registers we saved
 ldw r10,0(sp)
 ldw et,8(sp)
@@ -52,7 +52,8 @@ ldw et,4(sp)
 ldw ea,12(sp) #and we save the return address, that will change if this ISR is interrupted
 addi sp,sp,16 #stack back to where it was
 subi ea,ea,4 #adjust return address
-
+movia et,1
+wrctl ctl0,r2   # Enable global Interrupts on Processor 
 eret
 
 #Register map

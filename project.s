@@ -5,7 +5,7 @@
 .equ Lego, 0xFF200060
 .equ ADDR_PUSHBUTTONS, 0xFF200050
 .equ IRQ_PUSHBUTTONS, 0x02
-.equ LEDS 0xFF200000
+.equ LEDS, 0xFF200000
 .equ PERIOD, 500000000
 .global main
 .section .exceptions, "ax"
@@ -34,7 +34,7 @@ IDoButtons:
  # set LEDS to values
 # NOTE: must save/restore any registers used other than et
 movia r10,LEDS
-movia et,ADDR_PUSHBUTTONS
+movia et, ADDR_PUSHBUTTONS
 stwio r0,12(et) #acknowledge
 ldwio et,0(et) #get button values
 stwio et,0(r10) #change LEDs

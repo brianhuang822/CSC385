@@ -14,7 +14,20 @@ IHANDLER:
 #rdctl et, ctl4
 #andi et,et,0x1 # check if interrupt pending from IRQ0 (ctl4:bit0)
 #beq et,r0,IDoButtons # if not timer, try buttons
-#COLOUR:
+#BUTTONS  
+  andi r15, r14, 2
+beq r0 , r15, CHECKRIGHT
+  #Timer set
+  addi r19 ,r19, 500
+  stwio r19, 8(r11)    
+br COLOUR
+CHECKRIGHT:
+andi r15, r14, 1
+beq r0 , r15, COLOUR
+  subi r19 ,r19, 500
+  blt r0, r19, COLOUR
+  stwio r19, 8(r11) 
+COLOUR:
   sthio r4,0(r2) /* r2 + 1032 pixel (4,1) is x*2 + y*1024 so (8 + 1024 = 1032) */
   addi r2, r2, 1
     movia r18, 0x0804B000
@@ -26,7 +39,7 @@ IHANDLER:
 movia r12, 7
   stwio r12, 4(r11)                          # Start the timer without continuing or interrupts 
 
-#br EXIT_IHANDLER
+
 #IDoButtons:
  # set LEDS to values
 # NOTE: must save/restore any registers used other than et
@@ -57,16 +70,15 @@ eret
 # r16 temp color
 # r17 temp screen pointer
 # r18 max 
+# r19 timer
 main:
   #movia r2,0x3
   movia r2,0x1
   wrctl ctl3,r2   # Enable interupts
-
+  movia r19, 0x1DCD6500
   #Timer set
   movia r11, Timer
-  movui r12, %lo(PERIOD)
-  stwio r12, 8(r11)                          # Set the period to be 1000 clock cycles 
-  movui r12, %hi(PERIOD)
+  stwio r19, 8(r11)                          # Set the period to be 1000 clock cycles 
   stwio r0, 12(r11)
 
   movui r12, 5
@@ -114,10 +126,10 @@ LOOP:
   br CLEARFILL
   CHECKFILL:
     andi r15, r14, 4
-  beq r0, r15, CHECKLEFT
+  beq r0, r15, LEAVE
   mov r16, r4
   br CLEARFILL
-  CHECKLEFT:
+  LEAVE:
   br LOOP
   CLEARFILL:
   movia r17, ADDR_VGA

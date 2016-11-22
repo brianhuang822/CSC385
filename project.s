@@ -10,17 +10,11 @@
 .global main
 .section .exceptions, "ax"
 IHANDLER:
-wrctl ctl0, r0 #turn off PIE bit
-addi sp,sp,-16 #we need to use a second register, so we save r10 and will use it
-stw r10,0(sp)
-stw et,4(sp) #we also save et and ctl1 just in case this interrupt interrupted another ISR
-rdctl et,ctl1
-stw et,8(sp)
-stw ea,12(sp) #and we save the return address, that will change if this ISR is interrupted
-rdctl et, ctl4
-andi et,et,0x1 # check if interrupt pending from IRQ0 (ctl4:bit0)
-beq et,r0,IDoButtons # if not timer, try buttons
-COLOUR:
+#wrctl ctl0, r0 #turn off PIE bit
+#rdctl et, ctl4
+#andi et,et,0x1 # check if interrupt pending from IRQ0 (ctl4:bit0)
+#beq et,r0,IDoButtons # if not timer, try buttons
+#COLOUR:
   sthio r4,0(r2) /* r2 + 1032 pixel (4,1) is x*2 + y*1024 so (8 + 1024 = 1032) */
   addi r2, r2, 1
   stwio r0,0(r11) 
@@ -30,30 +24,21 @@ COLOUR:
 	movia r2, ADDR_VGA
 	TimerReset:
 	stwio r0, 0(r11)
-movia r12, 5
+movia r12, 7
   stwio r12, 4(r11)                          # Start the timer without continuing or interrupts 
 
-br EXIT_IHANDLER
-IDoButtons:
+#br EXIT_IHANDLER
+#IDoButtons:
  # set LEDS to values
 # NOTE: must save/restore any registers used other than et
-movia r10,LEDS
-movia et, ADDR_PUSHBUTTONS
-stwio r0,12(et) #acknowledge
-ldwio et,0(et) #get button values
-stwio et,0(r10) #change LEDs
+#movia r10,LEDS
+#movia et, ADDR_PUSHBUTTONS
+#stwio r0,12(et) #acknowledge
+#ldwio et,0(et) #get button values
+#stwio et,0(r10) #change LEDs
 
 EXIT_IHANDLER:
-# now restore the registers we saved
-ldw r10,0(sp)
-ldw et,8(sp)
-wrctl ctl1, et
-ldw et,4(sp)
-ldw ea,12(sp) #and we save the return address, that will change if this ISR is interrupted
-addi sp,sp,16 #stack back to where it was
 subi ea,ea,4 #adjust return address
-movia et,1
-wrctl ctl0,et   # Enable global Interrupts on Processor 
 eret
 
 #Register map
@@ -67,7 +52,7 @@ eret
 # r11 Timer location
 # r12 Timer temp
 # r13 max res
-# r14 640
+# r14 ea
 # r15 480
 main:
 movia r2,ADDR_PUSHBUTTONS
@@ -75,7 +60,8 @@ movia r2,ADDR_PUSHBUTTONS
   stwio r3,8(r2)  # Enable interrupts on pushbuttons 1,2, 3 and 4
   stwio r0,12(r2) # Clear edge capture register to prevent unexpected interrupt
 
-  movia r2,0x3
+  #movia r2,0x3
+  movia r2,0x1
   wrctl ctl3,r2   # Enable interupts
 
   #Timer set
@@ -85,7 +71,7 @@ movia r2,ADDR_PUSHBUTTONS
   movui r12, %hi(PERIOD)
   stwio r0, 12(r11)
 
-  movui r12, 5
+  movui r12, 7
   stwio r12, 4(r11)                          # Start the timer without continuing or interrupts 
 
   

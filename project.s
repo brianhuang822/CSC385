@@ -53,7 +53,7 @@ ldw ea,12(sp) #and we save the return address, that will change if this ISR is i
 addi sp,sp,16 #stack back to where it was
 subi ea,ea,4 #adjust return address
 movia et,1
-wrctl ctl0,r2   # Enable global Interrupts on Processor 
+wrctl ctl0,et   # Enable global Interrupts on Processor 
 eret
 
 #Register map
@@ -64,7 +64,6 @@ eret
 # r7 RED
 # r8 GREEN
 # r9 BLUE
-# r10 OFFSET
 # r11 Timer location
 # r12 Timer temp
 # r13 max res

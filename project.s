@@ -17,9 +17,8 @@ IHANDLER:
 #COLOUR:
   sthio r4,0(r2) /* r2 + 1032 pixel (4,1) is x*2 + y*1024 so (8 + 1024 = 1032) */
   addi r2, r2, 1
-  stwio r0,0(r11) 
-    movia r13, 0x0804B000
-	bgtu r13, r2, TimerReset
+    movia r18, 0x0804B000
+	bgtu r18, r2, TimerReset
 	#RESET
 	movia r2, ADDR_VGA
 	TimerReset:
@@ -49,17 +48,16 @@ eret
 # r7 RED
 # r8 GREEN
 # r9 BLUE
+# r10 Push Buttons
 # r11 Timer location
 # r12 Timer temp
-# r13 max res
-# r14 ea
-# r15 480
+# r13 LEDS
+# r14 Push Button values
+# r15 condition checker
+# r16 temp color
+# r17 temp screen pointer
+# r18 max 
 main:
-movia r2,ADDR_PUSHBUTTONS
-  movia r3,0xF
-  stwio r3,8(r2)  # Enable interrupts on pushbuttons 1,2, 3 and 4
-  stwio r0,12(r2) # Clear edge capture register to prevent unexpected interrupt
-
   #movia r2,0x3
   movia r2,0x1
   wrctl ctl3,r2   # Enable interupts
@@ -71,7 +69,7 @@ movia r2,ADDR_PUSHBUTTONS
   movui r12, %hi(PERIOD)
   stwio r0, 12(r11)
 
-  movui r12, 7
+  movui r12, 5
   stwio r12, 4(r11)                          # Start the timer without continuing or interrupts 
 
   
@@ -104,4 +102,28 @@ LOOP:
   slli r4,r4, 5 #Space for Blue
   add r4, r4, r9
   
+  #CHECK Buttons
+  movia r10, ADDR_PUSHBUTTONS
+  movia r13,LEDS
+  ldwio r14,0(r10) #get button values
+  stwio r14,0(r13) #change LEDs
+  CHECKCLEAR:
+  andi r15, r14, 8
+  beq r0, r15, CHECKFILL
+  movia r16, 0xFFFF
+  br CLEARFILL
+  CHECKFILL:
+    andi r15, r14, 4
+  beq r0, r15, CHECKLEFT
+  mov r16, r4
+  br CLEARFILL
+  CHECKLEFT:
   br LOOP
+  CLEARFILL:
+  movia r17, ADDR_VGA
+  movia r18, 0x0804B000
+  CLEARFILLLOOP:
+   sthio r16,0(r17) /* r2 + 1032 pixel (4,1) is x*2 + y*1024 so (8 + 1024 = 1032) */
+  addi r17, r17, 1
+  bgtu r17, r18, LOOP
+br CLEARFILLLOOP

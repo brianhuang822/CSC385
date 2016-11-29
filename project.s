@@ -7,6 +7,9 @@
 .equ IRQ_PUSHBUTTONS, 0x02
 .equ LEDS, 0xFF200000
 .equ PERIOD, 500000000
+.equ HEX0,0xFF200020
+.equ HEX1, 0xFF200030
+
 .global main
 .section .exceptions, "ax"
 IHANDLER:
@@ -23,6 +26,7 @@ stw r7, 8(sp)
 stw r8, 12(sp)
 stw r9, 16(sp)
 stw r10, 20(sp)
+
   andi r15, r14, 2
 beq r0 , r15, CHECKRIGHT
   #Timer set
@@ -37,6 +41,8 @@ ldwio r19, 8(r11)
   subi r19 ,r19, 500
   blt r0, r19, COLOUR
   stwio r19, 8(r11) 
+  
+  
 COLOUR:
 movia r6, Lego
 movia  r10, 0x07f557ff     # set direction for motors and sensors to output and sensor data register to inputs
@@ -216,6 +222,38 @@ LOOP:
   slli r4,r4, 5 #Space for Blue
   add r4, r4, r9
   
+  movia r15, HEX0
+  movia r16, HEX_bits
+  
+  #RED
+  mov r17, r7
+  srli r17, r17, 1
+  andi r17,r17,0xf
+  add r17, r17, r16
+  ldbio r18, 0(r17)
+  mov r22, r18
+  
+  #Green
+    mov r17, r8
+  srli r17, r17, 2
+  andi r17,r17,0xf
+  add r17, r17, r16
+  ldbio r18, 0(r17)
+  slli r22, r22, 8
+  add r22,r22, r18
+  
+  #Blue
+      mov r17, r9
+  srli r17, r17, 1
+  andi r17,r17,0xf
+  add r17, r17, r16
+  ldbio r18, 0(r17)
+  slli r22, r22, 8
+  add r22,r22, r18
+  
+  stwio r22, 0(r15)
+  
+  
   #CHECK Buttons
   movia r10, ADDR_PUSHBUTTONS
   movia r13,LEDS
@@ -235,9 +273,33 @@ LOOP:
   br LOOP
   CLEARFILL:
   movia r17, ADDR_VGA
-  movia r18, 0x0804B000
+  movia r18, 0x0803BE7E
   CLEARFILLLOOP:
    sthio r16,0(r17) /* r2 + 1032 pixel (4,1) is x*2 + y*1024 so (8 + 1024 = 1032) */
   addi r17, r17, 1
   bgtu r17, r18, LOOP
 br CLEARFILLLOOP
+
+
+
+
+.data
+
+HEX_bits:
+	.byte  0x3f           	/* 0 */
+	.byte  0x06           	/* 1 */
+	.byte  0x5b          	/* 2 */
+	.byte  0x4f           	/* 3 */
+	.byte  0x66        		/* 4 */
+	.byte  0x6d        		/* 5 */
+	.byte  0x7d        		/* 6 */
+	.byte  0x07        		/* 7 */
+	.byte  0xff           	/* 8 */
+	.byte  0x6f           	/* 9 */
+	.byte  0x77           	/* A */
+	.byte  0xfc           	/* B */
+	.byte  0x39           	/* C */
+	.byte  0x5e           	/* D */
+	.byte  0xf9           	/* E */
+	.byte  0xf1           	/* F */
+.end

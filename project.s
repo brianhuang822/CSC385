@@ -2,7 +2,7 @@
 .equ ADDR_CHAR, 0x09000000 
 .equ ADDR_SLIDESWITCHES, 0xFF200040
 .equ Timer, 0xFF202000  # (Hint: See DESL website for documentation on LEDs/Switches)
-.equ Lego, 0xFF200060
+.equ Lego, 0xFF200070
 .equ ADDR_PUSHBUTTONS, 0xFF200050
 .equ IRQ_PUSHBUTTONS, 0x02
 .equ LEDS, 0xFF200000
@@ -39,6 +39,9 @@ ldwio r19, 8(r11)
   stwio r19, 8(r11) 
 COLOUR:
 movia r6, Lego
+movia  r10, 0x07f557ff     # set direction for motors and sensors to output and sensor data register to inputs
+   stwio  r10, 4(r6)
+   
  movia r5, 0xfffffbff
    stwio  r5, 0(r6)
 
@@ -59,7 +62,7 @@ movia r6, Lego
    ldwio  r7,  0(r6)          # checking for valid data sensors
    srli   r8,r7,13          # bit 11 is valid bit for sensor 0
    andi   r8,  r8,0x1
-   #bne    r0,  r8,WAIT        # wait for valid bit to be low: sensor 0 needs to be valid
+  #bne    r0,  r8,WAIT        # wait for valid bit to be low: sensor 0 needs to be valid
  good1:
    srli   r7, r7, 27          # shift to the right by 27 bits so that 4-bit sensor value is in lower 4 bits
    andi   r10, r7, 0x0f        #Value of sensor 0 is r10

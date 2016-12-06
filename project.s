@@ -10,7 +10,43 @@
 .equ HEX0,0xFF200020
 .equ HEX1, 0xFF200030
 
-.global main
+.data                  # "data" section for input and output lists
+HEX_bits_garbage:
+	.byte  0x3f           	/* 0 */
+	.byte  0x06           	/* 1 */
+	.byte  0x5b          	/* 2 */
+	.byte  0x4f           	/* 3 */
+	.byte  0x66        		/* 4 */
+	.byte  0x6d        		/* 5 */
+	.byte  0x7d        		/* 6 */
+	.byte  0x07        		/* 7 */
+	.byte  0xff           	/* 8 */
+	.byte  0x6f           	/* 9 */
+	.byte  0x77           	/* A */
+	.byte  0xfc           	/* B */
+	.byte  0x39           	/* C */
+	.byte  0x5e           	/* D */
+	.byte  0xf9           	/* E */
+	.byte  0xf1           	/* F */
+
+HEX_bits:
+	.byte  0x3f           	/* 0 */
+	.byte  0x06           	/* 1 */
+	.byte  0x5b          	/* 2 */
+	.byte  0x4f           	/* 3 */
+	.byte  0x66        		/* 4 */
+	.byte  0x6d        		/* 5 */
+	.byte  0x7d        		/* 6 */
+	.byte  0x07        		/* 7 */
+	.byte  0xff           	/* 8 */
+	.byte  0x6f           	/* 9 */
+	.byte  0x77           	/* A */
+	.byte  0xfc           	/* B */
+	.byte  0x39           	/* C */
+	.byte  0x5e           	/* D */
+	.byte  0xf9           	/* E */
+	.byte  0xf1           	/* F */
+
 .section .exceptions, "ax"
 IHANDLER:
 #wrctl ctl0, r0 #turn off PIE bit
@@ -175,6 +211,9 @@ eret
 # r19 timer
 # r20 currentX
 # r21 currentY
+
+.text
+.global main
 main:
 movia sp, 0x50000000
 mov r20, r0
@@ -230,27 +269,31 @@ LOOP:
   srli r17, r17, 1
   andi r17,r17,0xf
   add r17, r17, r16
-  ldbio r18, 0(r17)
+  ldb r18, 0(r17)
+  andi r18, r18, 0xff
   mov r22, r18
   
-  #Green
-    mov r17, r8
-  srli r17, r17, 2
-  andi r17,r17,0xf
-  add r17, r17, r16
-  ldbio r18, 0(r17)
-  slli r22, r22, 8
-  add r22,r22, r18
+
+   #Green
+   mov r17, r8
+   srli r17, r17, 2
+   andi r17,r17,0xf
+   add r17, r17, r16
+   ldb r18, 0(r17)
+   andi r18, r18, 0xff
+   slli r22, r22, 8
+   add r22,r22, r18
   
-  #Blue
-      mov r17, r9
-  srli r17, r17, 1
-  andi r17,r17,0xf
-  add r17, r17, r16
-  ldbio r18, 0(r17)
-  slli r22, r22, 8
-  add r22,r22, r18
-  
+   #Blue
+   mov r17, r9
+   srli r17, r17, 1
+   andi r17,r17,0xf
+   add r17, r17, r16
+   ldb r18, 0(r17)
+   andi r18, r18, 0xff
+   slli r22, r22, 8
+   add r22,r22, r18
+
   stwio r22, 0(r15)
   
   
@@ -282,24 +325,3 @@ br CLEARFILLLOOP
 
 
 
-
-.data
-
-HEX_bits:
-	.byte  0x3f           	/* 0 */
-	.byte  0x06           	/* 1 */
-	.byte  0x5b          	/* 2 */
-	.byte  0x4f           	/* 3 */
-	.byte  0x66        		/* 4 */
-	.byte  0x6d        		/* 5 */
-	.byte  0x7d        		/* 6 */
-	.byte  0x07        		/* 7 */
-	.byte  0xff           	/* 8 */
-	.byte  0x6f           	/* 9 */
-	.byte  0x77           	/* A */
-	.byte  0xfc           	/* B */
-	.byte  0x39           	/* C */
-	.byte  0x5e           	/* D */
-	.byte  0xf9           	/* E */
-	.byte  0xf1           	/* F */
-.end
